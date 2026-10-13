@@ -42,14 +42,6 @@ git clone <your-repository-url>
 cd walk-and-relax
 ```
 
-If initializing a brand new repository from scratch:
-
-```bash
-mkdir walk-and-relax
-cd walk-and-relax
-npm init -y
-```
-
 ### 2. Configure `package.json`
 
 Ensure your `package.json` contains the following configuration, scripts, and libraries:
@@ -60,6 +52,9 @@ Ensure your `package.json` contains the following configuration, scripts, and li
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
@@ -79,6 +74,7 @@ Ensure your `package.json` contains the following configuration, scripts, and li
     "@types/node": "^22.14.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "autoprefixer": "^10.4.21",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.7.0"
   }
@@ -90,17 +86,7 @@ Ensure your `package.json` contains the following configuration, scripts, and li
 Run the install command to populate `node_modules`:
 
 ```bash
-npm install
-```
-
-Or install specific packages manually:
-
-```bash
-# Core Dependencies
-npm install react react-dom lucide-react motion vite @vitejs/plugin-react @tailwindcss/vite
-
-# Developer Dependencies
-npm install -D typescript @types/react @types/react-dom @types/node tailwindcss
+npm install --legacy-peer-deps
 ```
 
 ### 4. Configuration Files
@@ -149,7 +135,7 @@ npm run build
 
 ## Deployment to Render.com (Guaranteed Zero-Issue Guide)
 
-Render.com is an ideal platform for **Walk&Relax**. Follow either the **Automated Blueprint (Recommended)** or the **Manual Dashboard** steps below to deploy without encountering common pitfalls like Node version mismatch or SPA 404 routing errors.
+Render.com is an ideal platform for **Walk&Relax**. Follow either the **Automated Blueprint (Recommended)** or the **Manual Dashboard** steps below to deploy without encountering common pitfalls like npm `ERESOLVE` peer dependency errors, Node version mismatches, or SPA 404 routing errors.
 
 ---
 
@@ -171,7 +157,7 @@ This repository includes a pre-configured `render.yaml` Blueprint. Render automa
    - Render reads `render.yaml` and displays the configured static site:
      - **Service Name**: `walk-and-relax`
      - **Runtime**: `Static Site`
-     - **Build Command**: `npm install && npm run build`
+     - **Build Command**: `npm install --legacy-peer-deps && npm run build`
      - **Publish Directory**: `./dist`
      - **Environment**: `NODE_VERSION=20.18.0`
      - **SPA Rewrite Rule**: `/* -> /index.html`
@@ -196,7 +182,7 @@ If you prefer to configure the deployment manually in the Render web interface:
    | **Name** | `walk-and-relax` | Your public Render subdomain URL |
    | **Branch** | `main` | Production branch to auto-deploy |
    | **Root Directory** | *(leave blank)* | Root of your repository |
-   | **Build Command** | `npm install && npm run build` | Compiles Vite into optimized JS/CSS |
+   | **Build Command** | `npm install --legacy-peer-deps && npm run build` | Compiles Vite with peer dependency safety |
    | **Publish Directory** | `dist` | Directory where Vite places compiled assets |
 
 3. **Set Node Version (Critical Step)**:
@@ -223,25 +209,14 @@ If you prefer to configure the deployment manually in the Render web interface:
 
 ### Zero-Issue Deployment Checklist & Troubleshooting
 
-| Potential Issue | Root Cause | Solution Implemented |
+| Error Encountered | Root Cause | Solution Implemented |
 | :--- | :--- | :--- |
-| **Build fails with syntax or Vite errors** | Render default Node version is too old (< 18) | Fixed via `render.yaml`, `.nvmrc`, and `NODE_VERSION=20.18.0` env var. |
-| **Page refresh shows "404 Not Found"** | Web server looks for a physical directory instead of routing to React SPA | Fixed via SPA rewrite rule (`/* -> /index.html`) in `render.yaml` & Dashboard settings. |
+| **`npm error ERESOLVE could not resolve esbuild`** | Older `esbuild@^0.25.0` conflicted with `vite@8.3.4` (which requires `esbuild@^0.27.0 \|\| ^0.28.0`) | **Fixed**: Removed `esbuild` from `devDependencies`, created `.npmrc` with `legacy-peer-deps=true`, and set Build Command to `npm install --legacy-peer-deps && npm run build`. |
+| **Build fails with syntax or Vite errors** | Render default Node version is too old (< 18) | **Fixed**: Added `.nvmrc` with `20`, `"engines": {"node": ">=18.0.0"}` in `package.json`, and `NODE_VERSION=20.18.0` in `render.yaml`. |
+| **Page refresh shows "404 Not Found"** | Web server looks for a physical directory instead of routing to React SPA | **Fixed**: Added SPA rewrite rule (`/* -> /index.html`) in `render.yaml` & Dashboard settings. |
 | **Blank white screen on load** | Incorrect publish directory | Publish directory must be set to `dist` (not `public` or `build`). |
 | **Mobile pedometer does not count steps** | Browser blocks motion sensors on unencrypted HTTP | Render automatically serves all traffic over verified **HTTPS** with free SSL certificates. Tap "Enable Motion Sensor" on iOS. |
 | **Browser blocks audio playback** | Browser autoplay policy blocks unprompted audio | Walk&Relax initiates audio strictly after the user taps "Play Audio" or selects a preset, fully complying with Web Audio autoplay policies. |
-
----
-
-## Important Device & Mobile Notes
-
-1. **HTTPS Requirement for Mobile Sensors**:
-   - Modern mobile web browsers (Safari on iOS, Chrome on Android) require **HTTPS** to access the `DeviceMotionEvent` accelerometer API.
-   - Deploying to Render automatically provides a free, pre-configured SSL/TLS HTTPS certificate.
-2. **iOS Safari Motion Permission**:
-   - On iOS 13+, physical motion permissions require an explicit user touch gesture. The app includes an **"Enable Motion Sensor"** button on the Pedometer tab that invokes `DeviceMotionEvent.requestPermission()`.
-3. **Audio Autoplay Policies**:
-   - In accordance with browser autoplay standards, audio is kept muted upon page load. Users initiate sound by tapping **"Play Audio"** or choosing a sound preset.
 
 ---
 
