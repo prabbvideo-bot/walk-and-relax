@@ -1,0 +1,6 @@
+{
+  "name": "Nocturne & Stride - Ambient Sounds & Sleep Timer",
+  "description": "Multi-channel ambient nature sound mixer, live motion-sensor walking pedometer & calorie tracker, and ultra-dim OLED bedtime clock with audio fade-out sleep timer.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

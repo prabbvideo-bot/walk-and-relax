@@ -1,0 +1,27 @@
+# Render.com Blueprint Specification
+# See https://render.com/docs/blueprint-spec for details
+
+services:
+  - type: web
+    name: walk-and-relax
+    runtime: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: NODE_VERSION
+        value: 20.18.0
+    routes:
+      # Single-Page Application (SPA) rewrite rule to prevent 404s on browser refresh
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
